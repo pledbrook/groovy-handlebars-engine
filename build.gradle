@@ -1,0 +1,64 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3"
+    }
+}
+
+apply plugin: "groovy"
+apply plugin: "idea"
+apply plugin: "maven-publish"
+//apply plugin: "bintray"
+
+group = "uk.co.cacoethes"
+version = "0.1"
+
+sourceCompatibility = "1.6"
+targetCompatibility = "1.6"
+
+ext {
+    groovyVersion = "2.1.9"
+}
+
+configurations {
+    provided
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    provided "org.codehaus.groovy:groovy:${groovyVersion}",
+             "org.codehaus.groovy:groovy-templates:${groovyVersion}"
+
+    compile  "com.github.jknack:handlebars:1.2.1"
+
+    testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
+}
+
+sourceSets.main.compileClasspath += configurations.provided
+
+publishing {
+    publications {
+        main(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "https://api.bintray.com/maven/pledbrook/lib/groovy-handlebars-engine"
+        }
+    }
+}
+
+// Lazy initialisation of publish task so that not all build users need to
+// set the repo.* project properties.
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(":publishMainPublicationToMavenRepository")) {
+        publishing.repositories.maven.credentials.username = project.'repo.username'
+        publishing.repositories.maven.credentials.password = project.'repo.password'
+    }
+}
