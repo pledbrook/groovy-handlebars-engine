@@ -13,7 +13,7 @@ apply plugin: "maven-publish"
 //apply plugin: "bintray"
 
 group = "uk.co.cacoethes"
-version = "0.1"
+version = "0.2"
 
 sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
@@ -24,6 +24,7 @@ ext {
 
 configurations {
     provided
+    docs
 }
 
 repositories {
@@ -34,6 +35,9 @@ dependencies {
     provided "org.codehaus.groovy:groovy:${groovyVersion}",
              "org.codehaus.groovy:groovy-templates:${groovyVersion}"
 
+    docs     "org.codehaus.groovy:groovy-groovydoc:${groovyVersion}",
+             "org.codehaus.groovy:groovy-ant:${groovyVersion}"
+
     compile  "com.github.jknack:handlebars:1.2.1"
 
     testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
@@ -41,10 +45,31 @@ dependencies {
 
 sourceSets.main.compileClasspath += configurations.provided
 
+groovydoc.groovyClasspath = configurations.docs
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+    from groovydoc.destinationDir
+}
+
 publishing {
     publications {
         main(MavenPublication) {
             from components.java
+
+            artifact sourcesJar {
+                classifier "sources"
+            }
+
+            artifact javadocJar {
+                classifier "javadoc"
+            }
         }
     }
     repositories {
